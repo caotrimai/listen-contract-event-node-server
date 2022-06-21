@@ -3,15 +3,22 @@ const fs = require('fs')
 const Web3 = require('web3')
 const marketplace = require('./contract/marketplace')
 const axiosRequest = require('./configs/request')
+const petty = require('./contract/petty')
 
 const web3 = new Web3(process.env.WEB3_ENDPOINT)
 const marketplaceContract = new web3.eth.Contract(marketplace.ABI,
   marketplace.ADDRESS)
+const pettyContract = new web3.eth.Contract(petty.ABI,
+  petty.ADDRESS)
 
 const EVENT = {
   ORDER_ADDED: 'OrderAdded',
   ORDER_MATCHED: 'OrderMatched',
   ORDER_CANCELED: 'OrderCanceled',
+}
+
+const PETTY_EVENT = {
+  TRANSFER: 'Transfer',
 }
 
 let lastedBlock = process.env.LASTED_BLOCK
@@ -70,12 +77,12 @@ const getEventData = (eventName, event) => {
   return eventData
 }
 
-const handleGotEvent = async (eventName, event) => {
+const handleMarketplaceEvent = async (eventName, event) => {
   const eventData = getEventData(eventName, event)
   if(!eventData) {
     return
   }
-  const res = await axiosRequest.post(`/event/${eventName}`,
+  const res = await axiosRequest.post(`/event/marketplace/${eventName}`,
     eventData)
   console.log(res)
 }
@@ -90,7 +97,53 @@ const getEvent = async (eventName, fromBlock, toBlock) => {
       return
     }
     for (const event of events) {
-      await handleGotEvent(eventName, event)
+      await handleMarketplaceEvent(eventName, event)
+    }
+  })
+}
+
+const getPettyTransferEvent = (event) => ({
+  event: event.event,
+  from: event.returnValues.from,
+  to: event.returnValues.to,
+  tokenId: event.returnValues. tokenId,
+  blockNumber: event.blockNumber,
+  transactionHash: event.transactionHash,
+})
+
+const getPettyEventData = (eventName, event) => {
+  let eventData
+  switch (eventName) {
+    case PETTY_EVENT.TRANSFER:
+      eventData = getPettyTransferEvent(event)
+      break
+    default:
+      break
+  }
+  return eventData
+}
+
+const handlePettyEvent = async (eventName, event) => {
+  const eventData = getPettyEventData(eventName, event)
+  if(!eventData) {
+    return
+  }
+  const res = await axiosRequest.post(`/event/petty/${eventName}`,
+    eventData)
+  console.log(res)
+}
+
+const getPettyEvent = async (eventName, fromBlock, toBlock) => {
+  await pettyContract.getPastEvents(eventName, {
+    fromBlock,
+    toBlock,
+  }, async (err, events) => {
+    if (err) {
+      console.error(err)
+      return
+    }
+    for (const event of events) {
+      await handlePettyEvent(eventName, event)
     }
   })
 }
@@ -106,6 +159,7 @@ const getEvents = async () => {
   await getEvent(EVENT.ORDER_ADDED, fromBlock, toBlock)
   await getEvent(EVENT.ORDER_MATCHED, fromBlock, toBlock)
   await getEvent(EVENT.ORDER_CANCELED, fromBlock, toBlock)
+  await getPettyEvent(PETTY_EVENT.TRANSFER, fromBlock, toBlock)
 
   lastedBlock = toBlock + 1
   saveConfig();
