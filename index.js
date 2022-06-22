@@ -79,12 +79,16 @@ const getEventData = (eventName, event) => {
 
 const handleMarketplaceEvent = async (eventName, event) => {
   const eventData = getEventData(eventName, event)
-  if(!eventData) {
+  if (!eventData) {
     return
   }
-  const res = await axiosRequest.post(`/event/marketplace/${eventName}`,
-    eventData)
-  console.log(res)
+  try {
+    const res = await axiosRequest.post(`/event/marketplace/${eventName}`,
+      eventData)
+    console.log(res)
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 const getEvent = async (eventName, fromBlock, toBlock) => {
@@ -106,7 +110,7 @@ const getPettyTransferEvent = (event) => ({
   event: event.event,
   from: event.returnValues.from,
   to: event.returnValues.to,
-  tokenId: event.returnValues. tokenId,
+  tokenId: event.returnValues.tokenId,
   blockNumber: event.blockNumber,
   transactionHash: event.transactionHash,
 })
@@ -125,7 +129,7 @@ const getPettyEventData = (eventName, event) => {
 
 const handlePettyEvent = async (eventName, event) => {
   const eventData = getPettyEventData(eventName, event)
-  if(!eventData) {
+  if (!eventData) {
     return
   }
   const res = await axiosRequest.post(`/event/petty/${eventName}`,
@@ -162,7 +166,7 @@ const getEvents = async () => {
   await getPettyEvent(PETTY_EVENT.TRANSFER, fromBlock, toBlock)
 
   lastedBlock = toBlock + 1
-  saveConfig();
+  saveConfig()
 }
 
 setInterval(getEvents, 5000)
