@@ -4,6 +4,7 @@ const Web3 = require('web3')
 const marketplace = require('./contract/marketplace')
 const axiosRequest = require('./configs/request')
 const petty = require('./contract/petty')
+const logger = require('./utils/logger')
 
 const web3 = new Web3(process.env.WEB3_ENDPOINT)
 const marketplaceContract = new web3.eth.Contract(marketplace.ABI,
@@ -85,9 +86,10 @@ const handleMarketplaceEvent = async (eventName, event) => {
   try {
     const res = await axiosRequest.post(`/event/marketplace/${eventName}`,
       eventData)
-    console.log(res)
+    logger.info(eventName)
+    logger.info(res)
   } catch (err) {
-    console.log(err)
+    logger.error(err)
   }
 }
 
@@ -134,7 +136,8 @@ const handlePettyEvent = async (eventName, event) => {
   }
   const res = await axiosRequest.post(`/event/petty/${eventName}`,
     eventData)
-  console.log(res)
+  logger.info(eventName)
+  logger.info(res)
 }
 
 const getPettyEvent = async (eventName, fromBlock, toBlock) => {
@@ -158,7 +161,7 @@ const getEvents = async () => {
   if (toBlock - fromBlock > 4000) {
     toBlock = fromBlock + 4000
   }
-  console.log({fromBlock, toBlock})
+  logger.info(`Block from ${fromBlock} to ${toBlock}`)
 
   await getEvent(EVENT.ORDER_ADDED, fromBlock, toBlock)
   await getEvent(EVENT.ORDER_MATCHED, fromBlock, toBlock)
