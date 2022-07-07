@@ -161,7 +161,7 @@ const getEvents = async () => {
   if (toBlock - fromBlock > 4000) {
     toBlock = fromBlock + 4000
   }
-  logger.info(`Block from ${fromBlock} to ${toBlock}`)
+  console.log(`Block from ${fromBlock} to ${toBlock}`)
 
   await getEvent(EVENT.ORDER_ADDED, fromBlock, toBlock)
   await getEvent(EVENT.ORDER_MATCHED, fromBlock, toBlock)
