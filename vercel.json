@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "env": {
+    "MARKETPLACE_API_ENDPOINT": "http://127.0.0.1:8000/api/v1/",
+    "WEB3_ENDPOINT": "https://data-seed-prebsc-2-s1.binance.org:8545/",
+    "LASTED_BLOCK": "20768203"
+  },
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "/.*",
+      "use": "@vercel/node"
+    }
+  ]
+}
